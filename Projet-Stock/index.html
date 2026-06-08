@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Septodont - Gestion Parc PC</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --sep: #D0011B;
+      --sep-dk: #A50015;
+      --sep-lt: #FFF0F2;
+      --sep-md: #FFDDE2;
+      --color-background-primary: #FFFFFF;
+      --color-background-secondary: #F4F5F7;
+      --color-background-tertiary: #EBECEE;
+      --color-border-secondary: #DFE1E5;
+      --color-border-tertiary: #ECEFF1;
+      --color-text-primary: #1A1A1A;
+      --color-text-secondary: #4A4A4A;
+      --color-text-tertiary: #757575;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'Courier New', Courier, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: #E9ECEF; /* Fond gris pour faire ressortir l'app */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 450px; /* Limite de largeur pour le mode bureau */
+      background: var(--color-background-primary);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--color-border-tertiary);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Ombre portée élégante */
+    }
+
+    .header { background: var(--sep); padding: 0 16px; height: 64px; display: flex; align-items: center; gap: 12px; position: relative; }
+    .logo-wrap { width: 40px; height: 40px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .h-title { flex: 1; font-size: 16px; font-weight: 600; color: #fff; }
+    .h-sub { font-size: 12px; color: rgba(255,255,255,.8); margin-top: 2px; }
+    
+    .burger { width: 40px; height: 40px; border: none; background: rgba(255,255,255,.15); border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; transition: background .15s; flex-shrink: 0; }
+    .burger:hover { background: rgba(255,255,255,.25); }
+    .burger span { display: block; width: 18px; height: 2px; background: #fff; border-radius: 2px; transition: all .25s; }
+    .burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .nav { background: var(--color-background-primary); border-bottom: 1px solid var(--color-border-tertiary); display: flex; overflow: hidden; max-height: 0; transition: max-height .3s ease; }
+    .nav.open { max-height: 65px; }
+    .nav-item { flex: 1; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; border: none; background: transparent; font-size: 11px; font-weight: 600; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .5px; border-bottom: 2px solid transparent; transition: all .15s; }
+    .nav-item i { font-size: 20px; }
+    .nav-item:hover { color: var(--color-text-secondary); background: var(--color-background-secondary); }
+    .nav-item.active { color: var(--sep); border-bottom-color: var(--sep); background: var(--sep-lt); }
+
+    .screen { display: none; padding: 20px 18px; }
+    .screen.active { display: block; }
+
+    .section-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; color: var(--color-text-tertiary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+    .sn-row { display: flex; gap: 8px; margin-bottom: 6px; }
+    .sn-input { flex: 1; height: 52px; border: 1.5px solid var(--color-border-secondary); border-radius: 12px; padding: 0 16px; font-size: 16px; font-family: var(--font-mono); font-weight: 600; color: var(--color-text-primary); background: var(--color-background-primary); outline: none; transition: all .2s; }
+    .sn-input:focus { border-color: var(--sep); box-shadow: 0 0 0 3px var(--sep-lt); }
+    .sn-input.ok { border-color: #1D9E75; background: #F2FCF9; }
+    .sn-input.err { border-color: #E24B4A; background: #FEF4F4; }
+    .btn-clr { width: 52px; height: 52px; border: 1.5px solid var(--color-border-secondary); border-radius: 12px; background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: background .15s; }
+    .btn-clr:hover { background: var(--color-background-tertiary); }
+    
+    .hint { font-size: 12px; min-height: 16px; margin-bottom: 16px; color: var(--color-text-tertiary); font-weight: 500; }
+    .hint.ok { color: #0F6E56; }
+    .hint.err { color: #A32D2D; }
+
+    .pc-info { background: var(--color-background-secondary); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--color-border-tertiary); margin-bottom: 20px; transition: opacity .2s; }
+    .pc-info.dim { opacity: .4; pointer-events: none; }
+    .pi-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--color-border-tertiary); }
+    .pi-row:last-child { border: none; padding-bottom: 0; }
+    .pi-row:first-child { padding-top: 0; }
+    .pi-l { color: var(--color-text-secondary); }
+    .pi-r { font-weight: 600; color: var(--color-text-primary); }
+
+    .sep-line { height: 1px; background: var(--color-border-tertiary); margin: 20px 0; }
+
+    .flux-label, .cat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; color: var(--color-text-tertiary); margin-bottom: 10px; }
+    .flux-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .flux-btn { height: 56px; border: 1.5px solid var(--color-border-secondary); border-radius: 12px; background: var(--color-background-primary); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all .15s; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); }
+    .flux-btn i { font-size: 22px; }
+    .flux-btn:hover { background: var(--color-background-secondary); }
+    .flux-btn.active-in { border-color: #1D9E75; background: #E1F5EE; color: #0F6E56; }
+    .flux-btn.active-out { border-color: var(--sep); background: var(--sep-lt); color: var(--sep-dk); }
+
+    .cat-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+    .cat-btn { height: 56px; border: 1.5px solid var(--color-border-secondary); border-radius: 12px; background: var(--color-background-primary); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all .15s; font-size: 11px; font-weight: 600; color: var(--color-text-secondary); }
+    .cat-btn i { font-size: 18px; }
+    .cat-btn:hover { background: var(--color-background-secondary); }
+    .cat-btn.active-neuf { border-color: #185FA5; background: #E6F1FB; color: #185FA5; }
+    .cat-btn.active-attr { border-color: #BA7517; background: #FAEEDA; color: #633806; }
+    .cat-btn.active-refaire { border-color: #A32D2D; background: #FCEBEB; color: #A32D2D; }
+
+    .btn-val { width: 100%; height: 56px; border: none; border-radius: 12px; background: var(--sep); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all .2s; }
+    .btn-val:hover:not(:disabled) { background: var(--sep-dk); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(208, 1, 27, 0.2); }
+    .btn-val:disabled { background: var(--color-background-tertiary); color: var(--color-text-tertiary); cursor: not-allowed; border: 1px solid var(--color-border-tertiary); }
+    
+    .toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 12px; background: #E1F5EE; border: 1px solid #5DCAA5; color: #085041; font-size: 13px; font-weight: 600; margin-top: 16px; transition: all .3s; opacity: 1; transform: translateY(0); }
+    .toast.hidden { opacity: 0; height: 0; margin: 0; padding: 0; border: none; pointer-events: none; overflow: hidden; transform: translateY(-10px); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .kpi { background: var(--color-background-secondary); border-radius: 12px; padding: 14px 16px; border: 1px solid var(--color-border-tertiary); }
+    .kpi-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--color-text-tertiary); font-weight: 600; margin-bottom: 6px; }
+    .kpi-val { font-size: 26px; font-weight: 600; color: var(--color-text-primary); line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; }
+    .kpi-val.green { color: #0F6E56; }
+    .kpi-val.red { color: var(--sep); }
+
+    .filter-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .f-btn { height: 32px; padding: 0 14px; border: 1px solid var(--color-border-secondary); border-radius: 20px; background: var(--color-background-primary); font-size: 12px; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; transition: all .15s; }
+    .f-btn.active { border-color: var(--sep); background: var(--sep-lt); color: var(--sep-dk); }
+    .f-btn:hover:not(.active) { background: var(--color-background-secondary); }
+
+    .tbl-wrap { border-radius: 12px; border: 1px solid var(--color-border-tertiary); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    thead tr { background: var(--color-background-secondary); }
+    th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border-tertiary); white-space: nowrap; }
+    td { padding: 12px 12px; border-bottom: 1px solid var(--color-border-tertiary); color: var(--color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+    tr:last-child td { border: none; }
+    tr.flash { background: var(--sep-lt); animation: fadeOut 2s forwards; }
+    @keyframes fadeOut { 0% { background-color: var(--sep-lt); } 100% { background-color: transparent; } }
+    tr:hover td { background: var(--color-background-secondary); }
+    
+    .pill { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .p-in { background: #E1F5EE; color: #085041; border: 1px solid #B8E4D5; }
+    .p-out { background: var(--sep-md); color: var(--sep-dk); border: 1px solid #FFC2CB; }
+    .p-neuf { background: #E6F1FB; color: #0C447C; border: 1px solid #C6DDF2; }
+    .p-attr { background: #FAEEDA; color: #633806; border: 1px solid #EED6AE; }
+    .p-ref { background: #FCEBEB; color: #791F1F; border: 1px solid #F3CACA; }
+
+    .log-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border-tertiary); font-size: 13px; }
+    .log-item:last-child { border: none; }
+    .log-ico { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .log-ico.in { background: #E1F5EE; color: #0F6E56; border: 1px solid #B8E4D5; }
+    .log-ico.out { background: var(--sep-md); color: var(--sep-dk); border: 1px solid #FFC2CB; }
+    .log-sn { font-weight: 600; color: var(--color-text-primary); font-size: 13px; margin-bottom: 2px; }
+    .log-det { font-size: 12px; color: var(--color-text-secondary); }
+    .log-time { font-size: 12px; font-weight: 500; color: var(--color-text-tertiary); margin-left: auto; white-space: nowrap; }
+    .empty { font-size: 14px; color: var(--color-text-tertiary); padding: 24px 0; text-align: center; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <div class="header">
+      <div class="logo-wrap">
+        <img src="logo.png" landscape" style="width: 80px; height: 50px;">
+      </div>
+      <div class="h-title">
+        <div>Parc informatique</div>
+        <div class="h-sub">Septodont · Gestion stock</div>
+      </div>
+      <button class="burger" id="burger" onclick="toggleNav()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="nav" id="nav">
+      <button class="nav-item active" id="tab-mouvement" onclick="goTab('mouvement')"><i class="ti ti-arrows-exchange"></i>Mouvement</button>
+      <button class="nav-item" id="tab-stock" onclick="goTab('stock')"><i class="ti ti-device-laptop"></i>Stock</button>
+      <button class="nav-item" id="tab-historique" onclick="goTab('historique')"><i class="ti ti-history"></i>Historique</button>
+    </div>
+
+    <div class="screen active" id="screen-mouvement">
+      <div class="section-lbl"><i class="ti ti-barcode" style="font-size:16px"></i>Numéro de série</div>
+      <div class="sn-row">
+        <input class="sn-input" id="sn" type="text" placeholder="Ex : SN-HP-00291" autocomplete="off" spellcheck="false" oninput="onSN()"/>
+        <button class="btn-clr" onclick="clearSN()" aria-label="Effacer"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="hint" id="hint">Saisir le numéro de série du PC.</div>
+
+      <div class="pc-info dim" id="pc-info">
+        <div class="pi-row"><span class="pi-l">Modèle</span><span class="pi-r" id="pi-model">—</span></div>
+        <div class="pi-row"><span class="pi-l">Statut actuel</span><span class="pi-r" id="pi-statut">—</span></div>
+        <div class="pi-row"><span class="pi-l">Catégorie</span><span class="pi-r" id="pi-cat">—</span></div>
+      </div>
+
+      <div class="sep-line"></div>
+
+      <div class="flux-label">Flux</div>
+      <div class="flux-btns">
+        <button class="flux-btn active-in" id="tgl-in" onclick="setFlux('in')">
+          <i class="ti ti-arrow-down-circle"></i>Entrée stock
+        </button>
+        <button class="flux-btn" id="tgl-out" onclick="setFlux('out')">
+          <i class="ti ti-arrow-up-circle"></i>Sortie stock
+        </button>
+      </div>
+
+      <div class="cat-label">Catégorie</div>
+      <div class="cat-btns">
+        <button class="cat-btn active-neuf" id="cat-neuf" onclick="setCat('Neuf')">
+          <i class="ti ti-star"></i>Neuf
+        </button>
+        <button class="cat-btn" id="cat-attr" onclick="setCat('À attribuer')">
+          <i class="ti ti-user-plus"></i>À attribuer
+        </button>
+        <button class="cat-btn" id="cat-refaire" onclick="setCat('À refaire')">
+          <i class="ti ti-tool"></i>À refaire
+        </button>
+      </div>
+
+      <button class="btn-val" id="btn-val" disabled onclick="validate()">
+        <i class="ti ti-check" style="font-size:18px"></i>Valider le mouvement
+      </button>
+      <div class="toast hidden" id="toast">
+        <i class="ti ti-circle-check" style="font-size:18px"></i>
+        <span id="toast-msg"></span>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-stock">
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-lbl">En stock</div>
+          <div class="kpi-val green" id="kpi-in">0</div>
+          <div class="kpi-sub">disponibles</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-lbl">Sortis</div>
+          <div class="kpi-val red" id="kpi-out">0</div>
+          <div class="kpi-sub">attribués</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-lbl">Total</div>
+          <div class="kpi-val" id="kpi-total">0</div>
+          <div class="kpi-sub">référencés</div>
+        </div>
+      </div>
+      <div class="filter-row">
+        <button class="f-btn active" id="f-all" onclick="setFilter('all')">Tous</button>
+        <button class="f-btn" id="f-stock" onclick="setFilter('En Stock')">En stock</button>
+        <button class="f-btn" id="f-sorti" onclick="setFilter('Sorti')">Sortis</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:30%">N° série</th>
+            <th style="width:30%">Modèle</th>
+            <th style="width:18%">Statut</th>
+            <th style="width:22%">Catégorie</th>
+          </tr></thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-historique">
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-lbl">Entrées</div>
+          <div class="kpi-val green" id="log-kpi-in">0</div>
+          <div class="kpi-sub">mouvements</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-lbl">Sorties</div>
+          <div class="kpi-val red" id="log-kpi-out">0</div>
+          <div class="kpi-sub">mouvements</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-lbl">Total</div>
+          <div class="kpi-val" id="log-kpi-total">0</div>
+          <div class="kpi-sub">opérations</div>
+        </div>
+      </div>
+      <div id="log-list"><div class="empty">Aucun mouvement enregistré.</div></div>
+    </div>
+
+  </div>
+
+  <script>
+  // Ton code JavaScript original conservé à l'identique car il est déjà excellent
+  const DB=[
+    {sn:'SN-HP-00291',modele:'HP ProBook 450 G8',statut:'En Stock',categorie:'Neuf'},
+    {sn:'SN-DL-10042',modele:'Dell Latitude 5420',statut:'Sorti',categorie:'À attribuer'},
+    {sn:'SN-LN-00187',modele:'Lenovo ThinkPad E14',statut:'En Stock',categorie:'À refaire'},
+    {sn:'SN-HP-00103',modele:'HP EliteBook 840 G9',statut:'Sorti',categorie:'Neuf'},
+    {sn:'SN-DL-10088',modele:'Dell OptiPlex 7090',statut:'En Stock',categorie:'À attribuer'},
+    {sn:'SN-HP-00412',modele:'HP ProBook 440 G9',statut:'En Stock',categorie:'Neuf'},
+    {sn:'SN-LN-00203',modele:'Lenovo IdeaPad 5',statut:'Sorti',categorie:'À refaire'},
+  ];
+  let flux='in',cat='Neuf',filter='all',logs=[],found=null,flashSN=null,navOpen=false;
+
+  function toggleNav(){
+    navOpen=!navOpen;
+    document.getElementById('nav').classList.toggle('open',navOpen);
+    document.getElementById('burger').classList.toggle('open',navOpen);
+  }
+
+  function goTab(t){
+    ['mouvement','stock','historique'].forEach(id=>{
+      document.getElementById('tab-'+id).classList.toggle('active',id===t);
+      document.getElementById('screen-'+id).classList.toggle('active',id===t);
+    });
+    if(t==='stock'){refreshKPI();refreshTable();}
+    if(t==='historique'){refreshLog();}
+    toggleNav();
+  }
+
+  function pIn(){return '<span class="pill p-in">En Stock</span>';}
+  function pOut(){return '<span class="pill p-out">Sorti</span>';}
+  function pCat(c){const m={'Neuf':'neuf','À attribuer':'attr','À refaire':'ref'};return `<span class="pill p-${m[c]||'neuf'}">${c}</span>`;}
+  function nt(){return new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+
+  function refreshKPI(){
+    const s=DB.filter(r=>r.statut==='En Stock').length;
+    document.getElementById('kpi-in').textContent=s;
+    document.getElementById('kpi-out').textContent=DB.length-s;
+    document.getElementById('kpi-total').textContent=DB.length;
+  }
+
+  function refreshTable(){
+    const rows=filter==='all'?DB:DB.filter(r=>r.statut===filter);
+    document.getElementById('tbl-body').innerHTML=rows.map(r=>`<tr class="${r.sn===flashSN?'flash':''}"><td style="font-family:var(--font-mono);font-size:11px">${r.sn}</td><td>${r.modele}</td><td>${r.statut==='En Stock'?pIn():pOut()}</td><td>${pCat(r.categorie)}</td></tr>`).join('');
+  }
+
+  function refreshLog(){
+    const li=logs.filter(l=>true).reverse();
+    document.getElementById('log-kpi-in').textContent=logs.filter(l=>l.dir==='in').length;
+    document.getElementById('log-kpi-out').textContent=logs.filter(l=>l.dir==='out').length;
+    document.getElementById('log-kpi-total').textContent=logs.length;
+    document.getElementById('log-list').innerHTML=li.length?li.map(l=>`<div class="log-item"><div class="log-ico ${l.dir}"><i class="ti ti-arrow-${l.dir==='in'?'down':'up'}-circle" aria-hidden="true"></i></div><div><div class="log-sn">${l.sn}</div><div class="log-det">${l.modele} · ${pCat(l.cat)}</div></div><div class="log-time">${l.time}</div></div>`).join(''):'<div class="empty">Aucun mouvement enregistré.</div>';
+  }
+
+  function setFilter(f){
+    filter=f;
+    document.getElementById('f-all').classList.toggle('active',f==='all');
+    document.getElementById('f-stock').classList.toggle('active',f==='En Stock');
+    document.getElementById('f-sorti').classList.toggle('active',f==='Sorti');
+    refreshTable();
+  }
+
+  function onSN(){
+    const v=document.getElementById('sn').value.trim().toUpperCase();
+    found=DB.find(r=>r.sn.toUpperCase()===v)||null;
+    const inp=document.getElementById('sn');
+    const hint=document.getElementById('hint');
+    const card=document.getElementById('pc-info');
+    if(!v){inp.className='sn-input';hint.textContent='Saisir le numéro de série du PC.';hint.className='hint';card.classList.add('dim');clearCard();document.getElementById('btn-val').disabled=true;return;}
+    if(found){
+      inp.className='sn-input ok';
+      hint.textContent='\u2713 PC identifié.';hint.className='hint ok';
+      card.classList.remove('dim');
+      document.getElementById('pi-model').textContent=found.modele;
+      document.getElementById('pi-statut').innerHTML=found.statut==='En Stock'?pIn():pOut();
+      document.getElementById('pi-cat').innerHTML=pCat(found.categorie);
+      document.getElementById('btn-val').disabled=false;
+    } else {
+      inp.className='sn-input err';
+      hint.textContent='Numéro de série inconnu dans le parc.';hint.className='hint err';
+      card.classList.add('dim');clearCard();
+      document.getElementById('btn-val').disabled=true;
+    }
+  }
+
+  function clearCard(){
+    document.getElementById('pi-model').textContent='—';
+    document.getElementById('pi-statut').textContent='—';
+    document.getElementById('pi-cat').textContent='—';
+  }
+
+  function clearSN(){
+    document.getElementById('sn').value='';
+    found=null;
+    document.getElementById('sn').className='sn-input';
+    document.getElementById('hint').textContent='Saisir le numéro de série du PC.';
+    document.getElementById('hint').className='hint';
+    document.getElementById('pc-info').classList.add('dim');
+    clearCard();
+    document.getElementById('btn-val').disabled=true;
+    document.getElementById('toast').className='toast hidden';
+  }
+
+  function setFlux(f){
+    flux=f;
+    document.getElementById('tgl-in').className='flux-btn'+(f==='in'?' active-in':'');
+    document.getElementById('tgl-out').className='flux-btn'+(f==='out'?' active-out':'');
+  }
+
+  function setCat(c){
+    cat=c;
+    document.getElementById('cat-neuf').className='cat-btn'+(c==='Neuf'?' active-neuf':'');
+    document.getElementById('cat-attr').className='cat-btn'+(c==='À attribuer'?' active-attr':'');
+    document.getElementById('cat-refaire').className='cat-btn'+(c==='À refaire'?' active-refaire':'');
+  }
+
+  function validate(){
+    if(!found) return;
+    const rec=DB.find(r=>r.sn===found.sn);
+    if(!rec) return;
+    rec.statut=flux==='in'?'En Stock':'Sorti';
+    rec.categorie=cat;
+    logs.push({sn:rec.sn,modele:rec.modele,dir:flux,cat,time:nt()});
+    flashSN=rec.sn;
+    document.getElementById('toast-msg').textContent=`${rec.sn} → ${rec.statut} · ${cat}`;
+    document.getElementById('toast').className='toast';
+    setTimeout(()=>{flashSN=null;clearSN();},2600);
+  }
+
+  refreshKPI();refreshTable();
+  </script>
+</body>
+</html>
